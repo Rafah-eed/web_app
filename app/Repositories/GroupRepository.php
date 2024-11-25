@@ -5,7 +5,8 @@ namespace App\Repositories;
 use App\Models\Group;
 use App\Models\GroupMember;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Auth;
+use Exception;
+use Illuminate\Support\Facades\DB;
 
 class GroupRepository
 {
@@ -37,20 +38,50 @@ class GroupRepository
         return $returnGroup;
     }
 
-    public function deleteGroup(array $data): bool
+    public function deleteGroup(array $data): int
     {
         try {
-            $groupOwner = Group::where('id', $data['group_id'])
-                ->where('owner_id', Auth::id())
-                ->first();
-
-            if ($groupOwner) {
-                $groupOwner->delete();
-                return true;
-            }
-        } catch (\Exception $e) {
+            return DB::table('groups')
+                ->where('id', $data['group_id'])
+                ->where('owner_id', $data['user_id'])
+                ->delete();
+        } catch (Exception $e) {
             logger()->error('Error in deleteGroup method: ' . $e->getMessage());
+            return 0;
         }
-        return false;
+}
+    public function allGroupsForUser(int|string|null $userId): \Illuminate\Http\JsonResponse
+    {
+        try {
+            $result = DB::table('groups')
+                ->where('owner_id', $userId)
+                ->get();
+            return response()->json([
+                'data' => $result,
+            ], 200);
+        } catch (Exception $e) {
+            logger()->error('Error in fetching method: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'Error in fetching groups from repository',
+            ], 500);
+        }
     }
+
+    public function allGroupsForMemberUser(int|string|null $userId): \Illuminate\Http\JsonResponse
+    {
+        try {
+            $result = DB::table('group_members')
+                ->where('user_id', $userId)
+                ->get();
+            return response()->json([
+                'data' => $result,
+            ], 200);
+        } catch (Exception $e) {
+            logger()->error('Error in fetching method: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'Error in fetching groups from repository',
+            ], 500);
+        }
+    }
+
 }

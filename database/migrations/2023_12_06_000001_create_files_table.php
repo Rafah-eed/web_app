@@ -13,11 +13,13 @@ return new class extends Migration {
         Schema::create('files', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->string('name');
+            $table->string('extension')->nullable();
             $table->unsignedBigInteger('group_id');
             $table->unsignedBigInteger('user_id');
             $table->string('path');
             $table->boolean('is_active');
             $table->boolean('is_reserved');
+
             $table->timestamps();
         });
     }

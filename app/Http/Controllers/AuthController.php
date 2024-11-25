@@ -35,7 +35,7 @@ class AuthController extends Controller
                 'lastName' => 'required|regex:/^[a-zA-Z0-9_]+$/|between:3,25',
                 'email' => 'required|email|unique:users',
                 'password' => 'required|min:8',
-                'role_type' => 'required'
+                'role_type' => 'required|in:user,admin'
             ];
             $validation = Validator::make($data, $rules);
             if ($validation->fails()) {

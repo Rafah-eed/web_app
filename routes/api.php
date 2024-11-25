@@ -1,7 +1,7 @@
 <?php
 
 use App\Http\Controllers\FileController;
-use Illuminate\Http\Request;
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\GroupController;
@@ -35,5 +35,12 @@ Route::controller(AuthController::class)->group(function(){
 Route::controller(FileController::class)->group(function(){
     Route::post('store', 'store');
 });
+
 Route::post('/createGroup',[GroupController::class,'createGroup'])->middleware('CheckGroupName');
 Route::delete('/deleteGroup',[GroupController::class,'deleteGroup'])->middleware('FileReserved');
+
+Route::middleware(['auth:sanctum', 'verified'])->group(function () {
+    Route::get('/allGroupsForOwnerUser', [GroupController::class, 'allGroupsForUser']);
+    Route::get('/allGroupsForMemberUser', [GroupController::class, 'allGroupsForMemberUser']);
+    Route::get('/allUserFiles', [UserController::class, 'allUserFiles']);
+});

@@ -13,7 +13,8 @@ return new class extends Migration {
         Schema::create('groups', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->string('name');
-            $table->Integer('owner_id');
+            $table->unsignedBigInteger('owner_id');
+
             $table->timestamps();
         });
     }
