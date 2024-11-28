@@ -55,4 +55,49 @@ class GroupService
         }
     }
 
+    public function allGroupFiles(array $data): \Illuminate\Http\JsonResponse
+    {
+        return $this->groupRepository->allGroupFiles($data);
+    }
+
+    public function RequestToJoinGroup(\Illuminate\Http\Request $request): \Illuminate\Http\JsonResponse
+    {
+        return $this->groupRepository->RequestToJoinGroup($request);
+    }
+
+    public function AcceptedRequest(\Illuminate\Http\Request $request): \Illuminate\Http\JsonResponse
+    {
+        return $this->groupRepository->AcceptedRequest($request);
+    }
+
+    public function refuseRequest(\Illuminate\Http\Request $request): \Illuminate\Http\JsonResponse
+    {
+        return $this->groupRepository->refuseRequest($request);
+    }
+
+    public function allSentRequestsFromGroupAdmin(\Illuminate\Http\Request $request): \Illuminate\Http\JsonResponse
+    {
+        return $this->groupRepository->allSentRequestsFromGroupAdmin($request);
+    }
+
+    public function GroupUsers(array $data)
+    {
+        return $this->groupRepository->GroupUsers($data);
+    }
+
+    public function displayAllUser(): \Illuminate\Http\JsonResponse
+    {
+        return $this->groupRepository->displayAllUser();
+    }
+
+    public function displayAllGroups(): \Illuminate\Http\JsonResponse
+    {
+        return $this->groupRepository->displayAllGroups();
+    }
+
+    public function searchUser(\Illuminate\Http\Request $request): \Illuminate\Http\JsonResponse
+    {
+        return $this->groupRepository->searchUser($request);
+    }
+
 }

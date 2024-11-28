@@ -17,29 +17,8 @@ class UserService
         $this->userRepository = $userRepository;
     }
 
-    public function all()
+    public function allUserFiles()
     {
-        return $this->userRepository->all();
-    }
-
-    public function find($id)
-    {
-        return $this->userRepository->find($id);
-    }
-
-    public function create(array $data)
-    {
-        // Add any additional logic here before creating the user
-        return $this->userRepository->create($data);
-    }
-
-    public function update(array $data, $id)
-    {
-        return $this->userRepository->update($data, $id);
-    }
-
-    public function delete($id)
-    {
-        return $this->userRepository->delete($id);
+        return $this->userRepository->allUserFiles();
     }
 }

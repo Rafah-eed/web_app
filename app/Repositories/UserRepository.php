@@ -6,6 +6,8 @@ use App\Models\File;
 use App\Models\Group;
 use App\Models\GroupMember;
 use App\Models\User;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class UserRepository implements UserRepositoryInterface
 {
@@ -58,5 +60,14 @@ class UserRepository implements UserRepositoryInterface
     public function delete($id)
     {
         // TODO: Implement delete() method.
+    }
+
+    public function allUserFiles()
+    {
+        $userId=Auth::id();
+        return $this->fileModel
+            ->where('user_id',$userId)
+            ->with('group','user')
+            ->get();
     }
 }

@@ -1,19 +1,13 @@
 <?php
 
 namespace App\Http\Controllers;
-//use App\Aspects\Logger;
-use App\Models\User;
-use Illuminate\Support\Facades\Log;
 
 use App\Repositories\UserRepository;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Str;
-use Laravel\Sanctum\PersonalAccessToken;
 use Exception;
 
 
@@ -87,22 +81,21 @@ class AuthController extends Controller
             ], 422);
         }
 
-        if ((Auth::attempt(['email' => $request->email, 'password' => $request->password])))
-        {
-            $user=Auth::user();
-            $token = $user->createToken('auth_token')->plainTextToken;
-            $datares['token']=$token;
+        $credentials = $request->only(['email', 'password']);
+
+        if (!Auth::attempt($credentials)) {
             return response()->json([
-                'messages'=>'User has been Login',
-                'data'=>$datares
-            ]);
+                'message' => 'The password is incorrect.',
+            ], 401);
         }
-        else
-        {
-            return response()->json([
-                'messages'=>'The password is incorrect',
-            ]);
-        }
+
+        $user = Auth::user();
+        $token = $user->createToken('auth_token')->plainTextToken;
+
+        return response()->json([
+            'message' => 'User has been logged in successfully.',
+            'token' => $token,
+        ]);
     }
 
 

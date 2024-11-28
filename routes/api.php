@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\FileController;
 use App\Http\Controllers\UserController;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\GroupController;
@@ -36,11 +37,50 @@ Route::controller(FileController::class)->group(function(){
     Route::post('store', 'store');
 });
 
-Route::post('/createGroup',[GroupController::class,'createGroup'])->middleware('CheckGroupName');
-Route::delete('/deleteGroup',[GroupController::class,'deleteGroup'])->middleware('FileReserved');
+
+Route::group(['middleware' => 'auth:sanctum'], function() {
+    Route::get('/getCurrentUserId', [UserController::class, 'getCurrentUserId']);
+});
+
+    //Route::get('/allUserFiles', [UserController::class, 'allUserFiles']);
+
 
 Route::middleware(['auth:sanctum', 'verified'])->group(function () {
+    Route::post('/createGroup',[GroupController::class,'createGroup'])->middleware('CheckGroupName');
+    Route::delete('/deleteGroup',[GroupController::class,'deleteGroup'])->middleware('FileReserved');
     Route::get('/allGroupsForOwnerUser', [GroupController::class, 'allGroupsForUser']);
     Route::get('/allGroupsForMemberUser', [GroupController::class, 'allGroupsForMemberUser']);
-    Route::get('/allUserFiles', [UserController::class, 'allUserFiles']);
+    Route::get('/allGroupFiles',[GroupController::class,'allGroupFiles']);
+    Route::post('/RequestToJoinGroup',[GroupController::class,'RequestToJoinGroup']);
+    Route::post('/AcceptedRequest',[GroupController::class,'AcceptedRequest']);
+    Route::post('/refuseRequest',[GroupController::class,'refuseRequest']);
+    Route::post('/allSentRequestsFromGroupAdmin',[GroupController::class,'allSentRequestsFromGroupAdmin']);
+    Route::get('/groupUsers',[GroupController::class,'groupUsers']);
+    Route::get('/displayAllUser',[GroupController::class,'displayAllUser']);
+    Route::get('/displayAllGroups',[GroupController::class,'displayAllGroups']);
+    Route::get('/searchUser',[GroupController::class,'searchUser']);
+
+});
+Route::get('/clear-cache', function () {
+    Artisan::call('cache:clear');
+    Artisan::call('config:clear');
+    Artisan::call('view:clear');
+    Artisan::call('route:clear');
+    Artisan::call('event:clear');
+
+    return "Cache cleared successfully!";
+});
+
+Route::middleware(['auth:sanctum', 'verified'])->group(function () {
+    Route::post('/uploadFileToGroup',[FileController::class,'uploadFileToGroup']);
+    Route::post('/downloadFile',[FileController::class,'downloadFile'])->middleware(['CheckMember','FileReserved']);
+    Route::post('/getFile',[FileController::class,'getFile']);
+    Route::delete('/deleteFile',[FileController::class,'deleteFile'])->middleware(['CheckFileOwner','FileReserved']);
+    Route::post('/updateFileAfterCheckOut',[FileController::class,'updateFileAfterCheckOut'])->middleware(['CheckMember','FileReserved']);
+    Route::post('/checkIn',[FileController::class,'checkIn'])->middleware(['CheckMember','FileReserved']);
+    Route::post('/checkOut',[FileController::class,'checkOut']);
+    Route::post('/bulkCheckIn',[FileController::class,'bulkCheckIn'])->middleware(['CheckMember','FileReserved']);
+    Route::get('/showReport',[FileController::class,'showReport']);
+    Route::get('/showReportForFile',[FileController::class,'showReportForFile']);
+
 });

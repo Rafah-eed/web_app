@@ -90,4 +90,57 @@ class GroupController extends Controller
             ], 404);
         }
     }
+
+    public function allGroupFiles(Request $request):JsonResponse
+    {
+        $data=$request->all();
+        $groupFiles=$this->groupService->allGroupFiles($data);
+        return response()->json([
+            'messages'=>'Successfully',
+            'data'=>$groupFiles
+        ],200);
+    }
+
+    public function RequestToJoinGroup(Request $request):JsonResponse
+    {
+        return $this->groupService->RequestToJoinGroup($request);
+    }
+
+    public function AcceptedRequest(Request $request):JsonResponse
+    {
+        return $this->groupService->AcceptedRequest($request);
+    }
+
+    public function refuseRequest(Request $request):JsonResponse
+    {
+        return $this->groupService->refuseRequest($request);
+    }
+
+    public function allSentRequestsFromGroupAdmin(Request $request):JsonResponse
+    {
+        return $this->groupService->allSentRequestsFromGroupAdmin($request);
+    }
+
+    public function groupUsers(Request $request):JsonResponse
+    {
+        $data=$request->all();
+        return response()->json([
+            'messages'=>'Successfully',
+            'data'=>$this->groupService->GroupUsers($data)
+        ]);
+    }
+
+    public function displayAllUser(): JsonResponse
+    {
+        return $this->groupService->displayAllUser();
+    }
+    public function displayAllGroups(): JsonResponse
+    {
+        return $this->groupService->displayAllGroups();
+    }
+
+    public function searchUser(Request $request):JsonResponse
+    {
+        return $this->groupService->searchUser($request);
+    }
 }
