@@ -21,13 +21,13 @@ class GroupRepository
         // Create and save the group
         $group = new Group();
         $group->name = $data['name'];
-        $group->owner_id = $data['owner_id'];
+        $group->owner_id = auth()->id();
         $group->save();
 
 // Create and save the group member
         $groupMember = new GroupMember();
         $groupMember->group_id = $group->id;
-        $groupMember->user_id = $data['owner_id'];
+        $groupMember->user_id = auth()->id();
         $groupMember->join_date = Carbon::now();
         $groupMember->save();
 
@@ -35,7 +35,7 @@ class GroupRepository
         $returnGroup = new Group();
         $returnGroup->id = $group->id;
         $returnGroup->name = $group->name;
-        $returnGroup->owner_id = $group->owner_id;
+        $returnGroup->owner_id = auth()->id();
         $returnGroup->updated_at = $group->updated_at;
         $returnGroup->created_at = $group->created_at;
 

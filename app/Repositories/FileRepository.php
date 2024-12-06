@@ -7,17 +7,18 @@ use App\Models\FileEvent;
 use App\Models\File;
 use App\Models\Group;
 use App\Models\User;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
-class FileRepository implements FileRepositoryInterface
+class FileRepository
 {
-    protected  File $fileModel;
+    protected File $fileModel;
     protected User $userModel;
     protected Group $groupModel;
-    protected  FileEvent $fileEventModel;
+    protected FileEvent $fileEventModel;
     protected EventType $eventTypeModel;
     private ?\Illuminate\Contracts\Auth\Authenticatable $authUser;
 
@@ -88,34 +89,32 @@ class FileRepository implements FileRepositoryInterface
             ->exists();
     }
 
-
-    public function uploadFileToGroup(array $data): ?File
+    public function store(Request $request): \Illuminate\Http\JsonResponse
     {
-        $groupName = $this->groupModel->where('id', $data['group_id'])->first()->name;
-        $file = $data['file'];
-        $fileName = $file->getClientOriginalName();
-        if (!$this->checkFileIfExist($data['group_id'],$fileName)) {
-            $exist = Storage::disk('local')->exists($groupName . '/' . $fileName);
-            if (!$exist) {
-                Storage::disk('local')->put($groupName . '/' . $fileName, file_get_contents($file), [
-                    'overwrite' => false,
-                ]);
-                $fileUrl = Storage::disk('local')->url($groupName . '/' . $fileName);
-                $this->fileModel->name = $fileName;
-                $this->fileModel->group_id = $data['group_id'];
-                $this->fileModel->user_id = $data['user_id'];
-                $this->fileModel->is_active = true;
-                $this->fileModel->is_reserved = false;
-                $this->fileModel->path = $fileUrl;
-                $this->fileModel->save();
-                return $this->fileModel;
-            } else
-                return null;
 
-        } else {
-            return null;
-        }
+        // Store the file in storage
+        $extension = $request->file('file')->getClientOriginalExtension();
+        $fileName = time() . '.' . $extension;
+        $path = Storage::putFileAs('public', $request->file('file'), $fileName);
+
+        // Save the file information in the database
+        File::create([
+            'name' => $request->file('file')->getClientOriginalName(),
+            'extension' => $extension,
+            'group_id' => $request->input('group_id'),
+            'user_id' => auth()->id(), // Assuming authenticated user
+            'path' => $path,
+            'is_active' => true,
+            'is_reserved' => false,
+        ]);
+
+        return response()->json([
+            'message' => 'File uploaded successfully',
+            'file_name' => $request->file('file')->getClientOriginalName(),
+            'file_path' => $path,
+        ], 201);
 
     }
+
 }
 

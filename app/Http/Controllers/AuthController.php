@@ -70,7 +70,7 @@ class AuthController extends Controller
     {
         $data = $request->all();
         $rules = [
-            'email' => 'required|regex:/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/|exists:users,email',
+            'email' => 'required',
             'password' => 'required|min:8'
         ];
         $validation = Validator::make($data, $rules);
@@ -85,16 +85,16 @@ class AuthController extends Controller
 
         if (!Auth::attempt($credentials)) {
             return response()->json([
-                'message' => 'The password is incorrect.',
+                'message' => 'The password or the email is incorrect.',
             ], 401);
         }
 
         $user = Auth::user();
         $token = $user->createToken('auth_token')->plainTextToken;
-
         return response()->json([
             'message' => 'User has been logged in successfully.',
             'token' => $token,
+            'user' => Auth::user()->toArray(),
         ]);
     }
 

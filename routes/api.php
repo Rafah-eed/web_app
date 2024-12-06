@@ -73,14 +73,5 @@ Route::get('/clear-cache', function () {
 
 Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::post('/uploadFileToGroup',[FileController::class,'uploadFileToGroup']);
-    Route::post('/downloadFile',[FileController::class,'downloadFile'])->middleware(['CheckMember','FileReserved']);
-    Route::post('/getFile',[FileController::class,'getFile']);
-    Route::delete('/deleteFile',[FileController::class,'deleteFile'])->middleware(['CheckFileOwner','FileReserved']);
-    Route::post('/updateFileAfterCheckOut',[FileController::class,'updateFileAfterCheckOut'])->middleware(['CheckMember','FileReserved']);
-    Route::post('/checkIn',[FileController::class,'checkIn'])->middleware(['CheckMember','FileReserved']);
-    Route::post('/checkOut',[FileController::class,'checkOut']);
-    Route::post('/bulkCheckIn',[FileController::class,'bulkCheckIn'])->middleware(['CheckMember','FileReserved']);
-    Route::get('/showReport',[FileController::class,'showReport']);
-    Route::get('/showReportForFile',[FileController::class,'showReportForFile']);
 
 });

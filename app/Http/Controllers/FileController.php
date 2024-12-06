@@ -2,10 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\File;
 use App\Services\FileService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-
+use Illuminate\Support\Facades\Storage;
 
 class FileController extends Controller
 {
@@ -16,12 +17,6 @@ class FileController extends Controller
         $this->fileService = $fileService;
     }
 
-    // GET /api/files
-    public function index(): JsonResponse
-    {
-        $files = $this->fileService->all();
-        return response()->json($files);
-    }
 
     // POST /api/files
     public function store(Request $request): JsonResponse
@@ -39,12 +34,6 @@ class FileController extends Controller
     }
 
 
-    // GET /api/files/{id}
-    public function show($id): JsonResponse
-    {
-        $file = $this->fileService->findById($id);
-        return response()->json($file);
-    }
 
     // PUT/PATCH /api/files/{id}
     public function update(Request $request, $id): JsonResponse
@@ -100,4 +89,9 @@ class FileController extends Controller
         return response()->json(['success' => $result]);
     }
 
+
+    public function uploadFileToGroup($data)
+    {
+        return $this->fileService->uploadFileToGroup($data);
+    }
 }

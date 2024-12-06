@@ -22,8 +22,7 @@ class GroupController extends Controller
     {
         $data = $request->all();
         $rules = [
-            'name' => 'required',
-            'owner_id' => 'required|exists:users,id'
+            'name' => 'required'
         ];
 
         $validation = Validator::make($data, $rules);
