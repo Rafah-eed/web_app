@@ -48,7 +48,7 @@ class Kernel extends HttpKernel
     /**
      * The application's route middleware.
      *
-     * These middleware may be assigned to groups or used individually.
+     * These middlewares may be assigned to all the groups or used individually.
      *
      * @var array<string, class-string|string>
      */
@@ -65,5 +65,7 @@ class Kernel extends HttpKernel
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
         'CheckGroupName'=>\App\Http\Middleware\CheckGroupName::class,
         'FileReserved'=>\App\Http\Middleware\FileReserved::class,
+        'CheckMember'=>\App\Http\Middleware\CheckMember::class,
+
         ];
 }

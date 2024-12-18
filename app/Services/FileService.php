@@ -6,19 +6,18 @@ use App\Models\File;
 use App\Models\FileEvent;
 use App\Models\Group;
 use App\Models\User;
-use App\Repositories\FileRepositoryInterface;
+use App\Repositories\FileRepository;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 
 class FileService
 {
-    private FileRepositoryInterface $fileRepositoryInterface;
+    private FileRepository $fileRepository;
 
 
-    public function __construct(FileService $fileService, FileRepositoryInterface $fileRepositoryInterface, File $fileModel, User $userModel, Group $groupModel, EventType $eventTypeModel, FileEvent $fileEventModel)
+    public function __construct(FileRepository $fileRepository)
     {
-        $this->fileService = $fileService;
-        $this->fileRepositoryInterface = $fileRepositoryInterface;
+        $this->fileRepository = $fileRepository;
     }
 
     public function getCurrentUserId(): int|string|null
@@ -28,41 +27,48 @@ class FileService
 
     public function create($data): File
     {
-        return $this->fileRepositoryInterface->create($data);
+        return $this->fileRepository->create($data);
     }
 
     public function update($id, $data): File
     {
-        return $this->fileRepositoryInterface->update($data, $id);
+        return $this->fileRepository->update($data, $id);
     }
 
     public function delete($id): void
     {
-        $this->fileRepositoryInterface->delete($id);
+        $this->fileRepository->delete($id);
     }
 
     public function setActive($active, $id)
     {
-        return $this->fileRepositoryInterface->setActive($active, $id);
+        return $this->fileRepository->setActive($active, $id);
     }
 
     public function setReserved($reserved, $id)
     {
-        return $this->fileRepositoryInterface->setReserved($reserved, $id);
+        return $this->fileRepository->setReserved($reserved, $id);
     }
 
     public function reserveFiles(array $fileIds): bool
     {
-        return $this->fileRepositoryInterface->reserveFiles($fileIds);
+        return $this->fileRepository->reserveFiles($fileIds);
     }
 
-    public function uploadFileToGroup(array $data)
+    public function uploadFileToGroup($data): ?File
     {
-        return $this->fileRepositoryInterface->uploadFileToGroup($data);
+        return $this->fileRepository->uploadFileToGroup($data);
     }
 
-    public function findById($id)
+    public function downloadFile($validatedData): ?array
     {
+        return $this->fileRepository->downloadFile($validatedData);
     }
+
+    public function addFileEvent(mixed $file_id, $user_id, int $int): FileEvent
+    {
+        return $this->fileRepository->addFileEvent($file_id, $user_id, $int);
+    }
+
 
 }

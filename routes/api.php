@@ -73,5 +73,6 @@ Route::get('/clear-cache', function () {
 
 Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::post('/uploadFileToGroup',[FileController::class,'uploadFileToGroup']);
+    Route::post('/downloadFile',[FileController::class,'downloadFile'])->middleware(['CheckMember','FileReserved']);
 
 });

@@ -6,7 +6,10 @@ use App\Models\File;
 use App\Services\FileService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Validator;
 
 class FileController extends Controller
 {
@@ -90,8 +93,46 @@ class FileController extends Controller
     }
 
 
-    public function uploadFileToGroup($data)
+    public function uploadFileToGroup(Request $request): ?File
     {
-        return $this->fileService->uploadFileToGroup($data);
+        $validatedData = $request->validate([
+            'file' => ['required', 'mimes:jpg,png,pdf|max:2048'],
+            'group_id' => ['required', 'exists:groups,id'],
+        ]);
+
+        return $this->fileService->uploadFileToGroup($validatedData);
     }
+
+    public function downloadFile(Request $request): \Illuminate\Http\Response|JsonResponse|\Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\Routing\ResponseFactory
+    {
+        $data = $request->all();
+        $validation = $request->validate([
+            'file_id' => 'required|integer'
+        ]);
+
+        $user_id = Auth::id();
+        $data['user_id'] = $user_id;
+
+        DB::beginTransaction();
+
+        try {
+            $responseData = $this->fileService->downloadFile($data);
+            $this->fileService->addFileEvent($data['file_id'], $user_id, 2);
+
+            if (!$responseData) {
+                throw new \Exception('Failed to process file or add event');
+            }
+
+            DB::commit();
+            return response($responseData['content'], 200, $responseData['headers']);
+        } catch (\Exception $e) {
+            DB::rollback();
+            return response()->json([
+                'status' => false,
+                'message' => $e->getMessage(),
+                'error_code' => 500
+            ], 500);
+        }
+    }
+
 }

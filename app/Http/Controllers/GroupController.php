@@ -43,7 +43,7 @@ class GroupController extends Controller
     public function deleteGroup(Request $request): JsonResponse
     {
         $data=$request->all();
-        if($this->groupService->deleteGroup($data)) {
+        if($this->groupService->deleteGroup($data) > 0) {
             return response()->json([
                 'messages'=>'Group Deleted Successfully',
                 'data'=>$data
@@ -51,7 +51,7 @@ class GroupController extends Controller
         }
         else {
             return response()->json([
-                'messages'=>'Not Owned Group',
+                'messages'=>'You are not authenticated to delete it',
             ],401);
         }
     }

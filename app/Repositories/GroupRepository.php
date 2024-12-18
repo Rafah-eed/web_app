@@ -47,7 +47,7 @@ class GroupRepository
         try {
             return DB::table('groups')
                 ->where('id', $data['group_id'])
-                ->where('owner_id', $data['user_id'])
+                ->where('owner_id', auth()->id())
                 ->delete();
         } catch (Exception $e) {
             logger()->error('Error in deleteGroup method: ' . $e->getMessage());
