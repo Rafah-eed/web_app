@@ -159,5 +159,59 @@ class FileRepository
         return $fileEventModel;
 
     }
+
+    public function deleteFile($data): bool
+    {
+        $result = $this->fileModel->where('id', $data['file_id'])->where('user_id', $data['user_id'])->update(['is_active' => 0]);
+
+        $file = $this->fileModel->where('id', $data['file_id'])->where('user_id', $data['user_id'])->first();
+
+        if (!$file) {
+            Log::error("File not found for ID: {$data['file_id']}");
+            return false;
+        }
+
+        $path = $file->path;
+        $newPath = 'trash/' . $file->name . '.' . $file->extension;
+
+        try {
+            if ($file->group_id == 1) {
+                $path = 'public/' . $file->name . '.' . $file->extension;
+            }
+
+            // Check if the source file exists
+            if (!File::exists($path)) {
+                Log::error("Source file not found: {$path}");
+                return false;
+            }
+
+            // Delete the file
+            if (!Storage::delete($path)) {
+                throw new \Exception("Failed to delete file: {$path}");
+            }
+
+            // Update the file path in the database
+            $this->fileModel->where('id', $data['file_id'])->update(['path' => $newPath]);
+
+            Log::info("File moved successfully: {$path} -> {$newPath}");
+            return true;
+        } catch (\Exception $e) {
+            Log::error("Error deleting file: " . $e->getMessage());
+            return false;
+        }
+
+    }
+
+    public function checkIn(array $data)
+    {
+        $result= $this->fileModel->where('id',$data['file_id'])->where('is_active',1)->lockForUpdate()->update(['is_reserved'=>1]);
+        return $result;
+    }
+
+    public function checkOut($data): bool
+    {
+        $result= $this->fileModel->where('id',$data['file_id'])->where('is_active',1)->update(['is_reserved'=>0]);
+        return $result;
+    }
 }
 

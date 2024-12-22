@@ -40,20 +40,10 @@ class FileService
         $this->fileRepository->delete($id);
     }
 
-    public function setActive($active, $id)
-    {
-        return $this->fileRepository->setActive($active, $id);
-    }
-
-    public function setReserved($reserved, $id)
-    {
-        return $this->fileRepository->setReserved($reserved, $id);
-    }
-
-    public function reserveFiles(array $fileIds): bool
-    {
-        return $this->fileRepository->reserveFiles($fileIds);
-    }
+//    public function reserveFiles(array $fileIds): bool
+//    {
+//        return $this->fileRepository->reserveFiles($fileIds);
+//    }
 
     public function uploadFileToGroup($data): ?File
     {
@@ -68,6 +58,21 @@ class FileService
     public function addFileEvent(mixed $file_id, $user_id, int $int): FileEvent
     {
         return $this->fileRepository->addFileEvent($file_id, $user_id, $int);
+    }
+
+    public function deleteFile(array $data): bool
+    {
+        return $this->fileRepository->deleteFile($data);
+    }
+
+    public function checkIn(array $data)
+    {
+        return $this->fileRepository->checkIn($data);
+    }
+
+    public function checkOut(array $data)
+    {
+        return $this->fileRepository->checkIn($data);
     }
 
 

@@ -3,13 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\File;
+use App\Models\FileUserReserved;
 use App\Services\FileService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Validation\Validator;
+use Illuminate\Validation\ValidationException;
 
 class FileController extends Controller
 {
@@ -51,14 +51,6 @@ class FileController extends Controller
         return response()->json($updatedFile);
     }
 
-    // DELETE /api/files/{id}
-    public function destroy($id): JsonResponse
-    {
-        $this->fileService->delete($id);
-        return response()->json(['message' => 'File deleted successfully'], 200);
-    }
-
-
     // PATCH /api/files/{id}/set-active
     public function setActive(Request $request, $id): JsonResponse
     {
@@ -96,7 +88,7 @@ class FileController extends Controller
     public function uploadFileToGroup(Request $request): ?File
     {
         $validatedData = $request->validate([
-            'file' => ['required', 'mimes:jpg,png,pdf|max:2048'],
+            'file' => ['required', 'max:2048'],
             'group_id' => ['required', 'exists:groups,id'],
         ]);
 
@@ -134,5 +126,79 @@ class FileController extends Controller
             ], 500);
         }
     }
+
+    public function deleteFile(Request $request): JsonResponse
+    {
+        $data = $request->all();
+
+        $validation = $request->validate([
+            'file_id' => 'required|integer'
+        ]);
+        //dd("success");
+        if (!$validation) {
+            return response()->json(['status' => false, 'message' => "validation error"], 400);
+        }
+
+        $user_id = Auth::id();
+
+        $data['user_id']=$user_id;
+        $responseData=$this->fileService->deleteFile($data);
+        DB::beginTransaction();
+        try {
+
+            if ($responseData)
+            {
+               $this->fileService->addFileEvent($data['file_id'],$user_id,3);
+                    $file_id=$data['file_id'];
+                    File::find($file_id)->delete();
+                    DB::commit();
+                    return response()->json(['status'=>true,'message'=>'File Deleted Successfully'],200);
+
+            }
+            else
+            {
+                return response()->json(['status'=>false,'message'=>'File not Deleted'],500);
+            }
+        }catch (\Exception $e) {
+            DB::rollback();
+            return response()->json(['message' => $e->getMessage()], 500);
+        }
+
+    }
+
+    public function checkIn(Request $request): JsonResponse// which is the same as reservation method
+    {
+        $data = $request->all();
+        $rules = ['file_id' => 'required|integer'];
+
+        try {
+            $this->validate($request, $rules);
+
+            $user_id = Auth::id();
+            $checkin = $this->fileService->checkIn($data);
+
+            if (!$checkin) {
+                return response()->json(['status' => false, 'message' => 'File Not Reserved'], 500);
+            }
+
+            DB::transaction(function () use ($data, $user_id) {
+
+                $this->fileService->addFileEvent($data['file_id'], $user_id, 4);
+                $file = File::find($data['file_id']);
+                $file_user_reserved = new FileUserReserved();
+                $file_user_reserved->group_id = $file->group_id;
+                $file_user_reserved->user_id = $file->user_id;
+                $file_user_reserved->save();
+            });
+
+            return response()->json(['status' => true, 'message' => 'The File Has Been Reserved'], 200);
+        } catch (ValidationException $e) {
+            return response()->json(['status' => false, 'message' => $e->validator->errors()->first()], 400);
+        } catch (\Exception $e) {
+            DB::rollback();
+            return response()->json(['status' => false, 'message' => 'An error occurred while processing your request'], 500);
+        }
+    }
+
 
 }
