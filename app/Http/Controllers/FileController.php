@@ -51,38 +51,38 @@ class FileController extends Controller
         return response()->json($updatedFile);
     }
 
-    // PATCH /api/files/{id}/set-active
-    public function setActive(Request $request, $id): JsonResponse
-    {
-        $validatedData = $request->validate([
-            'active' => 'required|boolean'
-        ]);
-
-        $updatedFile = $this->fileService->setActive($validatedData['active'], $id);
-        return response()->json($updatedFile);
-    }
-
-    // PATCH /api/files/{id}/set-reserved
-    public function setReserved(Request $request, $id): JsonResponse
-    {
-        $validatedData = $request->validate([
-            'reserved' => 'required|boolean'
-        ]);
-
-        $updatedFile = $this->fileService->setReserved($validatedData['reserved'], $id);
-        return response()->json($updatedFile);
-    }
-
-    // POST /api/files/reserve
-    public function reserveFiles(Request $request): JsonResponse
-    {
-        $validatedData = $request->validate([
-            'file_ids' => 'required|array|min:1',
-        ]);
-
-        $result = $this->fileService->reserveFiles($validatedData['file_ids']);
-        return response()->json(['success' => $result]);
-    }
+//    // PATCH /api/files/{id}/set-active
+//    public function setActive(Request $request, $id): JsonResponse
+//    {
+//        $validatedData = $request->validate([
+//            'active' => 'required|boolean'
+//        ]);
+//
+//        $updatedFile = $this->fileService->setActive($validatedData['active'], $id);
+//        return response()->json($updatedFile);
+//    }
+//
+//    // PATCH /api/files/{id}/set-reserved
+//    public function setReserved(Request $request, $id): JsonResponse
+//    {
+//        $validatedData = $request->validate([
+//            'reserved' => 'required|boolean'
+//        ]);
+//
+//        $updatedFile = $this->fileService->setReserved($validatedData['reserved'], $id);
+//        return response()->json($updatedFile);
+//    }
+//
+//    // POST /api/files/reserve
+//    public function reserveFiles(Request $request): JsonResponse
+//    {
+//        $validatedData = $request->validate([
+//            'file_ids' => 'required|array|min:1',
+//        ]);
+//
+//        $result = $this->fileService->reserveFiles($validatedData['file_ids']);
+//        return response()->json(['success' => $result]);
+//    }
 
 
     public function uploadFileToGroup(Request $request): ?File
@@ -187,7 +187,7 @@ class FileController extends Controller
                 $file = File::find($data['file_id']);
                 $file_user_reserved = new FileUserReserved();
                 $file_user_reserved->group_id = $file->group_id;
-                $file_user_reserved->user_id = $file->user_id;
+                $file_user_reserved->user_id = $user_id;
                 $file_user_reserved->save();
             });
 

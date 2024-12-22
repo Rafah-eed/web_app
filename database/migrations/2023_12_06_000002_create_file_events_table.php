@@ -47,6 +47,8 @@ return new class extends Migration {
             DB::table('event_types')->insert([
                 ['name' => 'Download', 'description' => null],
                 ['name' => 'Upload', 'description' => null],
+                ['name' => 'delete', 'description' => null],
+                ['name' => 'reserve', 'description' => null],
             ]);
         } finally {
             Schema::enableForeignKeyConstraints();

@@ -76,5 +76,5 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::post('/downloadFile',[FileController::class,'downloadFile'])->middleware(['CheckMember','FileReserved']);
     Route::delete('/deleteFile',[FileController::class,'deleteFile'])->middleware(['CheckOwner','FileReserved']);
     Route::post('/checkIn',[FileController::class,'checkIn'])->middleware(['CheckMember','FileReserved']);
-
+    // TODO : CHECK IN MULTIPLE FILES
 });

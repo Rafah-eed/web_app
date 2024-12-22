@@ -27,7 +27,7 @@ class FileReserved
             $file = File::where('group_id', $groupId)->where('is_reserved', 1)->first();
             if ($file)
             {
-                return response()->json(['message' => 'file is reserved'], 403);
+                return response()->json(['message' => 'file is already reserved'], 403);
             }
             else
                 return $next($request);
@@ -40,7 +40,7 @@ class FileReserved
         $file=File::where('id',$fileId)->where('is_reserved',1)->first();
               if($file)
                  {
-                      return response()->json(['message' => 'file is reserved'], 403);
+                      return response()->json(['message' => 'file is already reserved'], 403);
                  }
               else
                   return $next($request);
