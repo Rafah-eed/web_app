@@ -19,6 +19,7 @@ class File extends Model
         'path',
         'is_active',
         'is_reserved',
+        'version',
     ];
 
     protected array $searchableFields = ['*'];

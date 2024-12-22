@@ -78,5 +78,8 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::post('/checkIn',[FileController::class,'checkIn'])->middleware(['CheckMember','FileReserved']);
     // TODO : CHECK IN MULTIPLE FILES
     Route::post('/checkOut',[FileController::class,'checkOut']);
+    Route::get('/showReportForFile',[FileController::class,'showReportForFile']);
+    Route::post('/updateFileInGroup',[FileController::class,'updateFileInGroup'])->middleware(['CheckMember','FileReserved']);
+
 
 });

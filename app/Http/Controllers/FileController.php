@@ -214,9 +214,7 @@ class FileController extends Controller
 
             if($checkout)
             {
-
                 $fileEvent=$this->fileService->addFileEvent($data['file_id'],$user_id,5);
-
                 $deleteFromDatabase=$this->fileService->deleteReservationFromDatabase($data['file_id']);
             if ($deleteFromDatabase)
                return response()->json(['status'=>true,'message'=>'Success, File Has Been Un-Reserved'],200);
@@ -230,6 +228,42 @@ class FileController extends Controller
             DB::rollback();
             return response()->json(['message' => $e->getMessage()], 500);
         }
+        return response()->json(['status'=>true,'message'=>'function ended'],200);
+
     }
+
+    public function updateFileInGroup(Request $request): JsonResponse
+    {
+        $data=$request->validate([
+            'file'=>'required',
+            'file_id' => ['required', 'integer', 'exists:files,id'],
+        ]);
+
+        if (!$data)
+        {
+            return response()->json(['status'=>false,'message'=>'errors in validating input.. try different input types'],500);
+        }
+
+        $data = $request->all();
+
+        $file=$this->fileService->updateFileInGroup($data);
+        DB::beginTransaction();
+        try {
+            if ($file)
+            {
+                $this->fileService->addFileEvent($file->id,Auth::id(),6);
+                DB::commit();
+                return response()->json(['status'=>true,'message'=>'File updated successfully'],200);
+            }
+            else
+            {
+                return response()->json(['status'=>false,'message'=>'File update failed'],500);
+            }
+        }catch (\Exception $e) {
+            DB::rollback();
+            return response()->json(['message' => $e->getMessage()], 500);
+        }
+    }
+
 
 }

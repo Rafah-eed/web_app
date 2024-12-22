@@ -19,7 +19,7 @@ return new class extends Migration {
             $table->string('path');
             $table->boolean('is_active');
             $table->boolean('is_reserved');
-
+            $table->integer('version')->default(1);
             $table->timestamps();
         });
     }

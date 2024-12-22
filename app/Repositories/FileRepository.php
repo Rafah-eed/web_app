@@ -222,5 +222,58 @@ class FileRepository
             DB::commit();
             return true;
     }
+
+    public function updateFileInGroup($data)
+    {
+        $fileId = $data['file_id'];
+        $existingFile = $this->fileModel->where('id', $fileId)->get()->first();
+
+        if (!$existingFile) {
+            return null;
+        }
+
+        $newFileName = $data['file']->getClientOriginalName();
+        $basename = pathinfo($newFileName, PATHINFO_FILENAME);
+        $fileExtension = $data['file']->getClientOriginalExtension();
+
+        $updatedFileDb = $this->fileModel->where('id', $existingFile->id)
+            ->where('name', $basename)
+            ->where('extension', $fileExtension)
+            ->get();
+
+
+        if (!$updatedFileDb) {
+            return null;
+        }
+        $group_id=$existingFile["group_id"];
+
+        $group = $this->groupModel->where('id', $group_id)->get()->first();
+        $groupName = $group->name;
+        $exist = Storage::disk('local')->exists($groupName . '/' . $newFileName);
+
+        if ($exist) {
+            $result = Storage::disk('local')->put($groupName . '/' . $newFileName, file_get_contents($data['file']), [
+                'overwrite' => true,
+            ]);
+
+            if ($result) {
+                $maxVersion = DB::table('files')->max('version') ?: 1;
+
+                // Increment the version
+                $newVersion = $maxVersion + 1;
+
+                // Update the record with the new version
+                DB::table('files')->where('id', $existingFile->id)->update(['version' => $newVersion]);
+
+                return $existingFile;
+            }
+        } else {
+            return null;
+        }
+        return null;
+    }
+
+
+
 }
 

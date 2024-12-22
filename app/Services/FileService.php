@@ -75,7 +75,12 @@ class FileService
         return $this->fileRepository->checkIn($data);
     }
 
-    public function deleteReservationFromDatabase($file_id)
+    public function updateFileInGroup($data)
+    {
+        return $this->fileRepository->updateFileInGroup($data);
+    }
+
+    public function deleteReservationFromDatabase($file_id): bool
     {
         return $this->fileRepository->deleteReservationFromDatabase($file_id);
     }
