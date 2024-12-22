@@ -200,5 +200,36 @@ class FileController extends Controller
         }
     }
 
+    public function checkOut(Request $request):JsonResponse
+    {
+        $data=$request->all();
+        $rules=[
+            'file_id'=>'required|integer'
+        ];
+
+        $user_id=Auth::id();
+        $checkout=$this->fileService->checkOut($data);
+        DB::beginTransaction();
+        try {
+
+            if($checkout)
+            {
+
+                $fileEvent=$this->fileService->addFileEvent($data['file_id'],$user_id,5);
+
+                $deleteFromDatabase=$this->fileService->deleteReservationFromDatabase($data['file_id']);
+            if ($deleteFromDatabase)
+               return response()->json(['status'=>true,'message'=>'Success, File Has Been Un-Reserved'],200);
+            }
+            else
+            {
+                return response()->json(['status'=>false,'message'=>'Unreserving the file failed'],500);
+
+            }
+        }catch (\Exception $e) {
+            DB::rollback();
+            return response()->json(['message' => $e->getMessage()], 500);
+        }
+    }
 
 }

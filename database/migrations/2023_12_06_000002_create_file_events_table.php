@@ -49,6 +49,7 @@ return new class extends Migration {
                 ['name' => 'Upload', 'description' => null],
                 ['name' => 'delete', 'description' => null],
                 ['name' => 'reserve', 'description' => null],
+                ['name' => 'checkout', 'description' => null],
             ]);
         } finally {
             Schema::enableForeignKeyConstraints();

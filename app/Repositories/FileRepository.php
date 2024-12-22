@@ -5,6 +5,7 @@ namespace App\Repositories;
 use App\Models\EventType;
 use App\Models\FileEvent;
 use App\Models\File;
+use App\Models\FileUserReserved;
 use App\Models\Group;
 use App\Models\User;
 use Carbon\Carbon;
@@ -212,6 +213,14 @@ class FileRepository
     {
         $result= $this->fileModel->where('id',$data['file_id'])->where('is_active',1)->update(['is_reserved'=>0]);
         return $result;
+    }
+
+    public function deleteReservationFromDatabase($file_id): bool
+    {
+            $file=File::find($file_id);
+            FileUserReserved::where('group_id', $file->group_id)->where('user_id', $file->user_id)->delete();
+            DB::commit();
+            return true;
     }
 }
 
