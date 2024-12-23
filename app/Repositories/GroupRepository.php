@@ -274,5 +274,27 @@ class GroupRepository
         ]);
     }
 
+    public function allReceivedRequests(Request $request)
+    {
+        $data=$request->all();
+        $rules=[
+            'user_id'=>'required|integer'
+        ];
+        $validation = Validator::make($data, $rules);
+        if ($validation->fails())
+        {
+            return response()->json(['status'=>false,'message'=>$validation->errors()->first()],500);
+        }
 
+        $allUserRequest = RequestUserToGroups::where('user_id', $data['user_id'])->with('group')->get();
+
+        if ($allUserRequest) {
+            return response()->json([
+                'data' => $allUserRequest
+            ]);
+        }
+        return response()->json([
+            'data' => $allUserRequest
+        ]);
+    }
 }

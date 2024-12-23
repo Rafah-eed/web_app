@@ -55,6 +55,7 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::post('/AcceptedRequest',[GroupController::class,'AcceptedRequest']);
     Route::post('/refuseRequest',[GroupController::class,'refuseRequest']);
     Route::post('/allSentRequestsFromGroupAdmin',[GroupController::class,'allSentRequestsFromGroupAdmin']);
+    Route::get('/allReceivedRequests',[GroupController::class,'allReceivedRequests']);
     Route::get('/groupUsers',[GroupController::class,'groupUsers']);
     Route::get('/displayAllUser',[GroupController::class,'displayAllUser']);
     Route::get('/displayAllGroups',[GroupController::class,'displayAllGroups']);

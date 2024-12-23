@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Repositories\GroupRepository;
 use Exception;
+use Illuminate\Http\Request;
 
 
 class GroupService
@@ -98,6 +99,11 @@ class GroupService
     public function searchUser(\Illuminate\Http\Request $request): \Illuminate\Http\JsonResponse
     {
         return $this->groupRepository->searchUser($request);
+    }
+
+    public function allReceivedRequests(Request $request)
+    {
+        return $this->groupRepository->allReceivedRequests($request);
     }
 
 }

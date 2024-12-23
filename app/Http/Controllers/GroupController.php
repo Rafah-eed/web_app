@@ -120,6 +120,10 @@ class GroupController extends Controller
         return $this->groupService->allSentRequestsFromGroupAdmin($request);
     }
 
+    public function allReceivedRequests(Request $request):JsonResponse
+    {
+        return $this->groupService->allReceivedRequests($request);
+    }
     public function groupUsers(Request $request):JsonResponse
     {
         $data=$request->all();
