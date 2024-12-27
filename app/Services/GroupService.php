@@ -101,7 +101,7 @@ class GroupService
         return $this->groupRepository->searchUser($request);
     }
 
-    public function allReceivedRequests(Request $request)
+    public function allReceivedRequests(Request $request): \Illuminate\Http\JsonResponse
     {
         return $this->groupRepository->allReceivedRequests($request);
     }

@@ -274,7 +274,7 @@ class GroupRepository
         ]);
     }
 
-    public function allReceivedRequests(Request $request)
+    public function allReceivedRequests(Request $request): \Illuminate\Http\JsonResponse
     {
         $data=$request->all();
         $rules=[
