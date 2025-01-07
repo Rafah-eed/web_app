@@ -273,6 +273,37 @@ class FileRepository
         return null;
     }
 
+    public function CheckInMultipleFiles(array $data): bool
+    {
+        $isReserved=false;
+
+        foreach ($data['ids'] as $fileId) {
+            $file = File::find($fileId);
+
+            if (!$file) {
+                throw new \Exception("File not found for ID: {$fileId}");
+            }
+
+            $result= $this->fileModel->where('id',$fileId)->where('is_active',1)->lockForUpdate()->update(['is_reserved'=>1]);
+
+            if ($result) {
+                $isReserved = true;
+                $file_user_reserved = new FileUserReserved();
+                $file_user_reserved->group_id = $file->group_id;
+                $file_user_reserved->user_id = $file->user_id;
+                $file_user_reserved->save();
+            }
+            else
+                $isReserved=false;
+
+        }
+        return $isReserved;
+    }
+    public function showReport()
+    {
+        $fileEvents = FileEvent::with('file','user','eventType')->get();
+        return response()->json(['file_events' => $fileEvents], 200);
+    }
 
 
 }

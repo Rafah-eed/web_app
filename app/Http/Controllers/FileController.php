@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\File;
 use App\Models\FileUserReserved;
 use App\Services\FileService;
+use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -112,12 +113,12 @@ class FileController extends Controller
             $this->fileService->addFileEvent($data['file_id'], $user_id, 2);
 
             if (!$responseData) {
-                throw new \Exception('Failed to process file or add event');
+                throw new Exception('Failed to process file or add event');
             }
 
             DB::commit();
             return response($responseData['content'], 200, $responseData['headers']);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             DB::rollback();
             return response()->json([
                 'status' => false,
@@ -159,7 +160,7 @@ class FileController extends Controller
             {
                 return response()->json(['status'=>false,'message'=>'File not Deleted'],500);
             }
-        }catch (\Exception $e) {
+        }catch (Exception $e) {
             DB::rollback();
             return response()->json(['message' => $e->getMessage()], 500);
         }
@@ -194,7 +195,7 @@ class FileController extends Controller
             return response()->json(['status' => true, 'message' => 'The File Has Been Reserved'], 200);
         } catch (ValidationException $e) {
             return response()->json(['status' => false, 'message' => $e->validator->errors()->first()], 400);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             DB::rollback();
             return response()->json(['status' => false, 'message' => 'An error occurred while processing your request'], 500);
         }
@@ -224,7 +225,7 @@ class FileController extends Controller
                 return response()->json(['status'=>false,'message'=>'Unreserving the file failed'],500);
 
             }
-        }catch (\Exception $e) {
+        }catch (Exception $e) {
             DB::rollback();
             return response()->json(['message' => $e->getMessage()], 500);
         }
@@ -259,10 +260,36 @@ class FileController extends Controller
             {
                 return response()->json(['status'=>false,'message'=>'File update failed'],500);
             }
-        }catch (\Exception $e) {
+        }catch (Exception $e) {
             DB::rollback();
             return response()->json(['message' => $e->getMessage()], 500);
         }
+    }
+
+    /**
+     * @throws Exception
+     */
+    public function CheckInMultipleFiles(Request $request):JsonResponse
+    {
+        $data=$request->all();
+        $result=$this->fileService->CheckInMultipleFiles($data);
+        DB::beginTransaction();
+        try{
+            if ($result)
+            {
+                DB::commit();
+
+                return response()->json(['status'=>true,'message'=>'Files Has Been Checked In'],200);
+            }
+            else
+            {
+                return response()->json(['status'=>false,'message'=>'Error in the operation'],500);
+            }
+        }catch (Exception $e) {
+            DB::rollback();
+            return response()->json(['message' => $e->getMessage()], 500);
+        }
+
     }
 
 

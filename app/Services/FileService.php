@@ -7,6 +7,7 @@ use App\Models\FileEvent;
 use App\Models\Group;
 use App\Models\User;
 use App\Repositories\FileRepository;
+use Exception;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 
@@ -83,6 +84,14 @@ class FileService
     public function deleteReservationFromDatabase($file_id): bool
     {
         return $this->fileRepository->deleteReservationFromDatabase($file_id);
+    }
+
+    /**
+     * @throws Exception
+     */
+    public function CheckInMultipleFiles(array $data): bool
+    {
+        return $this->fileRepository->CheckInMultipleFiles($data);
     }
 
 
