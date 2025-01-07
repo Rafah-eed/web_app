@@ -21,7 +21,6 @@ class FileController extends Controller
         $this->fileService = $fileService;
     }
 
-
     // POST /api/files
     public function store(Request $request): JsonResponse
     {
@@ -37,8 +36,6 @@ class FileController extends Controller
         }
     }
 
-
-
     // PUT/PATCH /api/files/{id}
     public function update(Request $request, $id): JsonResponse
     {
@@ -51,40 +48,6 @@ class FileController extends Controller
         $updatedFile = $this->fileService->update($validatedData, $id);
         return response()->json($updatedFile);
     }
-
-//    // PATCH /api/files/{id}/set-active
-//    public function setActive(Request $request, $id): JsonResponse
-//    {
-//        $validatedData = $request->validate([
-//            'active' => 'required|boolean'
-//        ]);
-//
-//        $updatedFile = $this->fileService->setActive($validatedData['active'], $id);
-//        return response()->json($updatedFile);
-//    }
-//
-//    // PATCH /api/files/{id}/set-reserved
-//    public function setReserved(Request $request, $id): JsonResponse
-//    {
-//        $validatedData = $request->validate([
-//            'reserved' => 'required|boolean'
-//        ]);
-//
-//        $updatedFile = $this->fileService->setReserved($validatedData['reserved'], $id);
-//        return response()->json($updatedFile);
-//    }
-//
-//    // POST /api/files/reserve
-//    public function reserveFiles(Request $request): JsonResponse
-//    {
-//        $validatedData = $request->validate([
-//            'file_ids' => 'required|array|min:1',
-//        ]);
-//
-//        $result = $this->fileService->reserveFiles($validatedData['file_ids']);
-//        return response()->json(['success' => $result]);
-//    }
-
 
     public function uploadFileToGroup(Request $request): ?File
     {
@@ -292,5 +255,13 @@ class FileController extends Controller
 
     }
 
+    public function showReportForUser()
+    {
+        return $this->fileService->showReportForUser();
+    }
 
+    public function showReportForFile($file_id)
+    {
+        return $this->fileService->showReportForFile($file_id);
+    }
 }

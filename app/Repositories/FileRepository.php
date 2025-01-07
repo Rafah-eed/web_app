@@ -299,10 +299,16 @@ class FileRepository
         }
         return $isReserved;
     }
-    public function showReport()
+
+
+    public function showReportForUser()
     {
-        $fileEvents = FileEvent::with('file','user','eventType')->get();
-        return response()->json(['file_events' => $fileEvents], 200);
+        return FileEvent::where('user_id',auth::id())->with('file','user','eventType')->get();
+    }
+
+    public function showReportForFile($fileId)
+    {
+        return FileEvent::where('file_id',$fileId)->with('file','user','eventType')->get();
     }
 
 

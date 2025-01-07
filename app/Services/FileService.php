@@ -94,5 +94,15 @@ class FileService
         return $this->fileRepository->CheckInMultipleFiles($data);
     }
 
+    public function showReportForUser()
+    {
+        return $this->fileRepository->showReportForUser();
+    }
+
+    public function showReportForFile($fileId)
+    {
+        return $this->fileRepository->showReportForFile($fileId);
+    }
+
 
 }
