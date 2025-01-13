@@ -37,6 +37,17 @@ class UserRepository implements UserRepositoryInterface
         return $user;
     }
 
+
+
+    public function allUserFiles()
+    {
+        $userId=Auth::id();
+        return $this->fileModel
+            ->where('user_id',$userId)
+            ->with('group','user')
+            ->get();
+    }
+
     public function all()
     {
         // TODO: Implement all() method.
@@ -60,14 +71,5 @@ class UserRepository implements UserRepositoryInterface
     public function delete($id)
     {
         // TODO: Implement delete() method.
-    }
-
-    public function allUserFiles()
-    {
-        $userId=Auth::id();
-        return $this->fileModel
-            ->where('user_id',$userId)
-            ->with('group','user')
-            ->get();
     }
 }
