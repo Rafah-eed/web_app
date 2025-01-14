@@ -241,18 +241,23 @@ class FileRepository
             ->where('extension', $fileExtension)
             ->get();
 
-
         if (!$updatedFileDb) {
             return null;
         }
-        $group_id=$existingFile["group_id"];
 
+        $group_id = $existingFile["group_id"];
         $group = $this->groupModel->where('id', $group_id)->get()->first();
         $groupName = $group->name;
-        $exist = Storage::disk('local')->exists($groupName . '/' . $newFileName);
+
+        // Construct the new path
+        $newPath = Storage::disk('local')->url($groupName . '/' . $newFileName);
+
+        // Check if the file already exists in the new location
+        $exist = Storage::disk('local')->exists($newPath);
 
         if ($exist) {
-            $result = Storage::disk('local')->put($groupName . '/' . $newFileName, file_get_contents($data['file']), [
+            // If it exists, update the existing file
+            $result = Storage::disk('local')->put($newPath, file_get_contents($data['file']), [
                 'overwrite' => true,
             ]);
 
@@ -263,13 +268,35 @@ class FileRepository
                 $newVersion = $maxVersion + 1;
 
                 // Update the record with the new version
-                DB::table('files')->where('id', $existingFile->id)->update(['version' => $newVersion]);
+                DB::table('files')->where('id', $existingFile->id)->update([
+                    'version' => $newVersion,
+                    'path' => $newPath
+                ]);
 
                 return $existingFile;
             }
         } else {
-            return null;
+            // If it doesn't exist, store the file in the new location
+            $result = Storage::disk('local')->put($newPath, file_get_contents($data['file']), [
+                'overwrite' => true,
+            ]);
+
+            if ($result) {
+                $maxVersion = DB::table('files')->max('version') ?: 1;
+
+                // Increment the version
+                $newVersion = $maxVersion + 1;
+
+                // Update the record with the new version and path
+                DB::table('files')->where('id', $existingFile->id)->update([
+                    'version' => $newVersion,
+                    'path' => $newPath
+                ]);
+
+                return $existingFile;
+            }
         }
+
         return null;
     }
 
