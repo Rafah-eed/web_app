@@ -65,7 +65,9 @@ return [
     ],
 
     'sanctum' => [
-        'expiration' => 60 * 24 * 7, // Set expiration to 7 days
+        'expiration' => null,
+        'ac_expiration' => 60, // One hour for access token
+        'rt_expiration' => 7 * 24 * 60, // 7 Days for refresh token
     ],
 
 

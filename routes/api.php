@@ -30,7 +30,10 @@ Route::controller(AuthController::class)->group(function(){
     Route::post('register', 'register');
     Route::post('login', 'login');
     Route::post('logout', 'logout');
-    Route::post('refresh', 'refresh');
+});
+
+Route::middleware(['auth:sanctum'])->group(function () {
+    Route::post('/refresh-token', [AuthController::class, 'refreshToken']);
 });
 
 Route::controller(FileController::class)->group(function(){

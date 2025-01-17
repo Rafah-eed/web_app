@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Exception;
+use Illuminate\Support\Str;
 
 
 class AuthController extends Controller
@@ -91,6 +92,8 @@ class AuthController extends Controller
 
         $user = Auth::user();
         $token = $user->createToken('auth_token')->plainTextToken;
+        $user['token']=$token;
+
         return response()->json([
             'message' => 'User has been logged in successfully.',
             'token' => $token,
@@ -108,42 +111,24 @@ class AuthController extends Controller
         ]);
     }
 
-
-    /**
-     * @throws Exception
-     */
-    public function refresh(): JsonResponse
+    public function refreshToken(Request $request): JsonResponse
     {
-        \Illuminate\Support\Facades\Log::info('Attempting to refresh token');
+        $token = Str::random(60); // Generate a random 60-character string
 
         $user = Auth::user();
-        \Illuminate\Support\Facades\Log::info('User retrieved: ', [$user]);
+        // Generate new access token
+        $newAccessToken = $user->createToken('auth_token')->plainTextToken;
 
-        if (!$user) {
-            return response()->json(['error' => 'User not authenticated'], 401);
-        }
-
-        // Log the current token
-        $currentToken = request()->header('Authorization') ?? '';
-        \Illuminate\Support\Facades\Log::info('Current Authorization header: ', ['token' => $currentToken]);
-
-        // Generate new token
-        $newToken = Hash::make(random_int(0, PHP_INT_MAX));
-
-        // Store the new token securely
-        session(['token' => $newToken]);
-
-        \Illuminate\Support\Facades\Log::info('New token generated: ', ['token' => $newToken]);
+        // Update refresh token in database
+        $user->update(['api_token' => $token]);
 
         return response()->json([
-            'status' => 'success',
-            'user' => $user,
-            'authorization' => [
-                'token' => $newToken,
-                'type' => 'bearer',
-            ]
+            'access_token' => $newAccessToken,
+            'refresh_token' => $token,
+            'message' => 'Access token refreshed successfully',
         ]);
     }
+
 
 
 }
