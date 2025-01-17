@@ -33,56 +33,6 @@ class FileRepository
         $this->eventTypeModel = $eventTypeModel;
     }
 
-
-    public function create(array $data): ?File
-    {
-        return $this->fileModel->create($data);
-    }
-
-    public function update(array $data, int $id): ?File
-    {
-        $file = $this->fileModel->findOrFail($id);
-        $file->update($data);
-        return $file;
-    }
-
-    public function delete(int $id): void
-    {
-        $this->fileModel->destroy($id);
-    }
-
-    public function setActive(bool $isActive, int $id): ?File
-    {
-        return $this->fileModel->findOrFail($id)->update(['is_active' => $isActive]);
-    }
-
-    public function setReserved(bool $isReserved, int $id): ?File
-    {
-        return $this->fileModel->findOrFail($id)->update(['is_reserved' => $isReserved]);
-    }
-
-    public function reserveFiles(array $fileIds): bool
-    {
-        try {
-            DB::transaction(function () use ($fileIds) {
-                $this->fileModel->whereIn('file_id', $fileIds)->update([
-                    'user_id' => auth()->id(),
-                    'date' => now()->toDateString(),
-                    'details' => null,
-                ]);
-            });
-            return true;
-        } catch (\Exception $e) {
-            Log::error('Error reserving files: ' . $e->getMessage());
-            return false;
-        }
-    }
-
-    public function getCurrentUserId(): ?int
-    {
-        return auth()->check() ? auth()->id() : null;
-    }
-
     public function checkFileIfExist($groupId, $fileName): bool
     {
         return $this->fileModel->where('group_id', $groupId)
@@ -98,8 +48,27 @@ class FileRepository
         $basename = pathinfo($fileName, PATHINFO_FILENAME);
         $fileExtension = $data['file']->getClientOriginalExtension();
 
-        if (!$this->checkFileIfExist($data['group_id'], $basename, $fileExtension)) {
-            Storage::disk('local')->put($groupName . '/' . $fileName, file_get_contents($data['file']), [
+        if (!$this->checkFileIfExist($data['group_id'], $basename )) {
+            $version = 1;
+
+            while ($this->fileModel->where('group_id', $data['group_id'])->where('name', $basename . '.' . $fileExtension)->exists()) {
+                $existingFiles = $this->fileModel->where('group_id', $data['group_id'])
+                    ->where('name', $basename . '.' . $fileExtension)
+                    ->orderBy('version', 'desc')
+                    ->get();
+
+                if (!empty($existingFiles) && $existingFiles->count() > 0) {
+                    $maxVersion = $existingFiles->max('version');
+                    $version = $maxVersion + 1;
+                } else {
+                    break;
+                }
+            }
+
+            $newFileName = $basename . '.' . $fileExtension;
+
+
+            Storage::disk('local')->put($groupName . '/' . $newFileName, file_get_contents($data['file']), [
                 'overwrite' => false,
             ]);
 
@@ -112,6 +81,7 @@ class FileRepository
                 'is_active' => true,
                 'is_reserved' => false,
                 'path' => $fileUrl,
+                'version' => $version,
             ]);
             $this->fileModel->save();
 
@@ -126,26 +96,17 @@ class FileRepository
         return $this->groupModel->find($groupId)->name ?? '';
     }
 
-    public function downloadFile($data):?array
+    public function downloadFile($data): string
     {
-        $fileUrl = $this->fileModel->where('id', $data['file_id'])->first()->path;
-        // dd($fileUrl);
-        $fileName = basename($fileUrl);
-        //dd($fileName);
-        $fileContent = Storage::disk('local')->get($fileUrl);
-        $mimeType = Storage::disk('local')->mimeType($fileUrl);
-        $headers = [
-            'Content-Type' => $mimeType,
-            'Content-Disposition' => "attachment; filename={$fileName}",
-        ];
+        // Get the file path from the database
+        $file = $this->fileModel->where('id', $data['file_id'])->first();
 
-        $responseData = [
-            'content' => $fileContent,
-            'headers' => $headers,
-        ];
-        //dd($responseData);
+        if (!$file || !$file->path) {
+            abort(404, 'File not found');
+        }
 
-        return $responseData;
+        // Generate the URL for the file
+        return $file->path;
     }
 
     public function addFileEvent(mixed $file_id, $user_id, $event_type_id): FileEvent
@@ -163,9 +124,9 @@ class FileRepository
 
     public function deleteFile($data): bool
     {
-        $result = $this->fileModel->where('id', $data['file_id'])->where('user_id', $data['user_id'])->update(['is_active' => 0]);
-
-        $file = $this->fileModel->where('id', $data['file_id'])->where('user_id', $data['user_id'])->first();
+        $file = $this->fileModel->where('id', $data['file_id'])
+            ->where('user_id', auth::id())
+            ->first();
 
         if (!$file) {
             Log::error("File not found for ID: {$data['file_id']}");
@@ -173,34 +134,25 @@ class FileRepository
         }
 
         $path = $file->path;
-        $newPath = 'trash/' . $file->name . '.' . $file->extension;
 
         try {
-            if ($file->group_id == 1) {
-                $path = 'public/' . $file->name . '.' . $file->extension;
-            }
-
-            // Check if the source file exists
-            if (!File::exists($path)) {
-                Log::error("Source file not found: {$path}");
-                return false;
-            }
+            // Delete associated file events
+            FileEvent::where('file_id', $data['file_id'])->delete();
 
             // Delete the file
             if (!Storage::delete($path)) {
                 throw new \Exception("Failed to delete file: {$path}");
             }
 
-            // Update the file path in the database
-            $this->fileModel->where('id', $data['file_id'])->update(['path' => $newPath]);
+            // Remove the record from the database
+            $this->fileModel->where('id', $data['file_id'])->delete();
 
-            Log::info("File moved successfully: {$path} -> {$newPath}");
+            Log::info("File deleted successfully: {$path}");
             return true;
         } catch (\Exception $e) {
             Log::error("Error deleting file: " . $e->getMessage());
             return false;
         }
-
     }
 
     public function checkIn(array $data)
@@ -249,15 +201,15 @@ class FileRepository
         $group = $this->groupModel->where('id', $group_id)->get()->first();
         $groupName = $group->name;
 
-        // Construct the new path
-        $newPath = Storage::disk('local')->url($groupName . '/' . $newFileName);
+        // Construct the new path using public disk
+        $newPath = Storage::disk('public')->putFileAs($groupName, $data['file'], $newFileName);
 
         // Check if the file already exists in the new location
-        $exist = Storage::disk('local')->exists($newPath);
+        $exist = Storage::disk('public')->exists($newPath);
 
         if ($exist) {
             // If it exists, update the existing file
-            $result = Storage::disk('local')->put($newPath, file_get_contents($data['file']), [
+            $result = Storage::disk('public')->put($newPath, file_get_contents($data['file']), [
                 'overwrite' => true,
             ]);
 
@@ -267,10 +219,12 @@ class FileRepository
                 // Increment the version
                 $newVersion = $maxVersion + 1;
 
-                // Update the record with the new version
+                $newFileNameWithVersion = $basename  . '.' . $fileExtension;
+
+                // Update record with new filename and path
                 DB::table('files')->where('id', $existingFile->id)->update([
                     'version' => $newVersion,
-                    'path' => $newPath
+                    'path' => Storage::disk('local')->url($groupName . '/' . $newFileNameWithVersion)
                 ]);
 
                 return $existingFile;
@@ -328,9 +282,10 @@ class FileRepository
     }
 
 
-    public function showReportForUser()
+    public function showReportForUser($userId)
     {
-        return FileEvent::where('user_id',auth::id())->with('file','user','eventType')->get();
+        return FileEvent::where('user_id',$userId)->with('file','user','eventType')->get();
+
     }
 
     public function showReportForFile($fileId)

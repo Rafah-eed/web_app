@@ -3,8 +3,8 @@
 namespace App\Models;
 
 use App\Models\Scopes\Searchable;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Laravel\Sanctum\HasApiTokens;
@@ -43,28 +43,19 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
     ];
 
-    
-    public function role(): \Illuminate\Database\Eloquent\Relations\BelongsTo
-    {
-        return $this->belongsTo(Role::class);
-    }
 
-    public function groups(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function groups(): HasMany
     {
         return $this->hasMany(Group::class, 'owner_id');
     }
 
-    public function groupMembers(): \Illuminate\Database\Eloquent\Relations\HasMany
-    {
-        return $this->hasMany(GroupMember::class);
-    }
 
-    public function files(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function files(): HasMany
     {
         return $this->hasMany(File::class);
     }
 
-    public function fileEvents(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function fileEvents(): HasMany
     {
         return $this->hasMany(FileEvent::class);
     }
@@ -74,11 +65,11 @@ class User extends Authenticatable
 //        return in_array($this->email, config('auth.super_admins'));
 //    }
 
-    public function fileUserReserved(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function fileUserReserved(): HasMany
     {
         return $this->hasMany(FileUserReserved::class);
     }
-    public function requestUserToGroups(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function requestUserToGroups(): HasMany
     {
         return $this->hasMany(RequestUserToGroups::class);
     }

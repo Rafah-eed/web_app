@@ -39,10 +39,11 @@ class File extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function fileEvents(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function events(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(FileEvent::class);
     }
+
 
 
 }

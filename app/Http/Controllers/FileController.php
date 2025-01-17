@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\File;
+use App\Models\FileEvent;
 use App\Models\FileUserReserved;
 use App\Services\FileService;
 use Exception;
@@ -10,43 +11,19 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 
 class FileController extends Controller
 {
     private FileService $fileService;
+    private File $fileModel;
 
-    public function __construct( FileService $fileService)
+    public function __construct( FileService $fileService, File $fileModel)
     {
         $this->fileService = $fileService;
-    }
-
-    // POST /api/files
-    public function store(Request $request): JsonResponse
-    {
-        $data = $request->all();
-        $data['user_id'] = auth()->id();
-
-        $file = $this->fileService->uploadFileToGroup($data);
-        if ($file) {
-            return response()->json(['status' => true, 'message' => 'File uploaded successfully', 'data' => [$file ,'uploaded']], 200);
-
-        } else {
-            return response()->json(['status' => false, 'message' => 'File upload failed'], 500);
-        }
-    }
-
-    // PUT/PATCH /api/files/{id}
-    public function update(Request $request, $id): JsonResponse
-    {
-        $validatedData = $request->validate([
-            'name' => 'sometimes|string|max:255',
-            'description' => 'sometimes|string|max:1000',
-            // Add other validation rules as needed
-        ]);
-
-        $updatedFile = $this->fileService->update($validatedData, $id);
-        return response()->json($updatedFile);
+        $this->fileModel = $fileModel;
     }
 
     public function uploadFileToGroup(Request $request): ?File
@@ -59,7 +36,7 @@ class FileController extends Controller
         return $this->fileService->uploadFileToGroup($validatedData);
     }
 
-    public function downloadFile(Request $request): \Illuminate\Http\Response|JsonResponse|\Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\Routing\ResponseFactory
+    public function downloadFile(Request $request): JsonResponse
     {
         $data = $request->all();
         $validation = $request->validate([
@@ -75,12 +52,12 @@ class FileController extends Controller
             $responseData = $this->fileService->downloadFile($data);
             $this->fileService->addFileEvent($data['file_id'], $user_id, 2);
 
-            if (!$responseData) {
-                throw new Exception('Failed to process file or add event');
-            }
-
             DB::commit();
-            return response($responseData['content'], 200, $responseData['headers']);
+            return response()->json([
+                'status' => true,
+                'message' => 'File downloaded successfully',
+                'url' => $responseData
+            ], 200);
         } catch (Exception $e) {
             DB::rollback();
             return response()->json([
@@ -93,40 +70,40 @@ class FileController extends Controller
 
     public function deleteFile(Request $request): JsonResponse
     {
-        $data = $request->all();
+        DB::transaction(function () use ($request) {
+            try {
+                // Validate input
+                $validatedData = $request->validate([
+                    'file_id' => ['required', 'integer'],
+                ]);
 
-        $validation = $request->validate([
-            'file_id' => 'required|integer'
-        ]);
-        //dd("success");
-        if (!$validation) {
-            return response()->json(['status' => false, 'message' => "validation error"], 400);
-        }
+                // Get file data
+                $fileId = $validatedData['file_id'];
+                $userId = auth()->id();
 
-        $user_id = Auth::id();
+                // Delete associated file events
+                FileEvent::where('file_id', $fileId)->delete();
 
-        $data['user_id']=$user_id;
-        $responseData=$this->fileService->deleteFile($data);
-        DB::beginTransaction();
-        try {
+                // Delete the file
+                if (Storage::delete($this->fileModel->where('id', $fileId)->where('user_id', $userId)->first()?->path)) {
 
-            if ($responseData)
-            {
-               $this->fileService->addFileEvent($data['file_id'],$user_id,3);
-                    $file_id=$data['file_id'];
-                    File::find($file_id)->delete();
-                    DB::commit();
-                    return response()->json(['status'=>true,'message'=>'File Deleted Successfully'],200);
+                    // Remove the record from the database
+                    $this->fileModel->where('id', $fileId)->delete();
 
+                    Log::info("File deleted successfully");
+                }
+                    return response()->json([
+                        'status' => true,
+                        'message' => 'File deleted successfully',
+                    ], 200);
+                }
+             catch (\Exception $e) {
+                Log::error("Error deleting file: " . $e->getMessage());
+                return response()->json(['status' => false, 'message' => $e->getMessage()], 500);
             }
-            else
-            {
-                return response()->json(['status'=>false,'message'=>'File not Deleted'],500);
-            }
-        }catch (Exception $e) {
-            DB::rollback();
-            return response()->json(['message' => $e->getMessage()], 500);
-        }
+
+        });
+        return response()->json(['status' => true, 'message' => "did we reach here"], 200);
 
     }
 
@@ -167,9 +144,6 @@ class FileController extends Controller
     public function checkOut(Request $request):JsonResponse
     {
         $data=$request->all();
-        $rules=[
-            'file_id'=>'required|integer'
-        ];
 
         $user_id=Auth::id();
         $checkout=$this->fileService->checkOut($data);
@@ -178,7 +152,7 @@ class FileController extends Controller
 
             if($checkout)
             {
-                $fileEvent=$this->fileService->addFileEvent($data['file_id'],$user_id,5);
+                $this->fileService->addFileEvent($data['file_id'],$user_id,5);
                 $deleteFromDatabase=$this->fileService->deleteReservationFromDatabase($data['file_id']);
             if ($deleteFromDatabase)
                return response()->json(['status'=>true,'message'=>'Success, File Has Been Un-Reserved'],200);
@@ -255,9 +229,9 @@ class FileController extends Controller
 
     }
 
-    public function showReportForUser()
+    public function showReportForUser($userId)
     {
-        return $this->fileService->showReportForUser();
+        return $this->fileService->showReportForUser($userId);
     }
 
     public function showReportForFile($file_id)

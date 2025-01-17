@@ -80,8 +80,7 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::post('/CheckInMultipleFiles',[FileController::class,'CheckInMultipleFiles'])->middleware(['CheckMember','FileReserved']);
     Route::post('/checkOut',[FileController::class,'checkOut']);
     Route::get('/showReportForFile/{fileId}',[FileController::class,'showReportForFile']);
-    Route::get('/showReportForUser',[FileController::class,'showReportForUser']);
+    Route::get('/showReportForUser/{userId}',[FileController::class,'showReportForUser']);
     Route::post('/updateFileInGroup',[FileController::class,'updateFileInGroup'])->middleware(['CheckMember','FileReserved']);
-
 
 });

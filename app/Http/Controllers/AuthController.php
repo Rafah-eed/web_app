@@ -27,7 +27,7 @@ class AuthController extends Controller
             $rules = [
                 'firstName' => 'required|regex:/^[a-zA-Z0-9_]+$/|between:3,25',
                 'lastName' => 'required|regex:/^[a-zA-Z0-9_]+$/|between:3,25',
-                'email' => 'required|email|unique:users',
+                'email' => 'required|email',
                 'password' => 'required|min:8',
                 'role_type' => 'required|in:user,admin'
             ];

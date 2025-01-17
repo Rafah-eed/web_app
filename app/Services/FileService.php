@@ -6,6 +6,7 @@ use App\Models\File;
 use App\Models\FileEvent;
 use App\Models\Group;
 use App\Models\User;
+use Illuminate\Http\Request;
 use App\Repositories\FileRepository;
 use Exception;
 use Illuminate\Support\Facades\Auth;
@@ -21,39 +22,14 @@ class FileService
         $this->fileRepository = $fileRepository;
     }
 
-    public function getCurrentUserId(): int|string|null
-    {
-        return Auth::id();
-    }
-
-    public function create($data): File
-    {
-        return $this->fileRepository->create($data);
-    }
-
-    public function update($id, $data): File
-    {
-        return $this->fileRepository->update($data, $id);
-    }
-
-    public function delete($id): void
-    {
-        $this->fileRepository->delete($id);
-    }
-
-//    public function reserveFiles(array $fileIds): bool
-//    {
-//        return $this->fileRepository->reserveFiles($fileIds);
-//    }
-
     public function uploadFileToGroup($data): ?File
     {
         return $this->fileRepository->uploadFileToGroup($data);
     }
 
-    public function downloadFile($validatedData): ?array
+    public function downloadFile($data): string
     {
-        return $this->fileRepository->downloadFile($validatedData);
+        return $this->fileRepository->downloadFile($data);
     }
 
     public function addFileEvent(mixed $file_id, $user_id, int $int): FileEvent
@@ -71,9 +47,9 @@ class FileService
         return $this->fileRepository->checkIn($data);
     }
 
-    public function checkOut(array $data)
+    public function checkOut(array $data): bool
     {
-        return $this->fileRepository->checkIn($data);
+        return $this->fileRepository->checkOut($data);
     }
 
     public function updateFileInGroup($data)
@@ -94,15 +70,17 @@ class FileService
         return $this->fileRepository->CheckInMultipleFiles($data);
     }
 
-    public function showReportForUser()
+    public function showReportForUser($userId)
     {
-        return $this->fileRepository->showReportForUser();
+        return $this->fileRepository->showReportForUser($userId);
     }
 
     public function showReportForFile($fileId)
     {
         return $this->fileRepository->showReportForFile($fileId);
     }
+
+
 
 
 }
