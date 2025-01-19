@@ -65,7 +65,7 @@ class FileRepository
                 }
             }
 
-            $newFileName = $basename . '.' . $fileExtension;
+            $newFileName = $basename . '.' . $version . '.' . $fileExtension;
 
 
             Storage::disk('local')->put($groupName . '/' . $newFileName, file_get_contents($data['file']), [
@@ -188,15 +188,6 @@ class FileRepository
         $basename = pathinfo($newFileName, PATHINFO_FILENAME);
         $fileExtension = $data['file']->getClientOriginalExtension();
 
-        $updatedFileDb = $this->fileModel->where('id', $existingFile->id)
-            ->where('name', $basename)
-            ->where('extension', $fileExtension)
-            ->get();
-
-        if (!$updatedFileDb) {
-            return null;
-        }
-
         $group_id = $existingFile["group_id"];
         $group = $this->groupModel->where('id', $group_id)->get()->first();
         $groupName = $group->name;
@@ -219,12 +210,20 @@ class FileRepository
                 // Increment the version
                 $newVersion = $maxVersion + 1;
 
-                $newFileNameWithVersion = $basename  . '.' . $fileExtension;
 
+                $newFileNameWithVersion = $basename  . '.' .$newVersion ;
+                $updatedFileDb = $this->fileModel->where('id', $existingFile->id)
+                    ->where('name', $newFileNameWithVersion)
+                    ->where('extension', $fileExtension)
+                    ->get();
+
+                if (!$updatedFileDb) {
+                    return null;
+                }
                 // Update record with new filename and path
                 DB::table('files')->where('id', $existingFile->id)->update([
                     'version' => $newVersion,
-                    'path' => Storage::disk('local')->url($groupName . '/' . $newFileNameWithVersion)
+                    'path' => Storage::disk('local')->url($groupName . '/' . $newPath)
                 ]);
 
                 return $existingFile;
