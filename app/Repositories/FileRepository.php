@@ -223,14 +223,14 @@ class FileRepository
                 // Update record with new filename and path
                 DB::table('files')->where('id', $existingFile->id)->update([
                     'version' => $newVersion,
-                    'path' => Storage::disk('local')->url($groupName . '/' . $newPath)
+                    'path' => Storage::disk('local')->url($newPath)
                 ]);
 
                 return $existingFile;
             }
         } else {
             // If it doesn't exist, store the file in the new location
-            $result = Storage::disk('local')->put($newPath, file_get_contents($data['file']), [
+            $result = Storage::disk('public')->put($newPath, file_get_contents($data['file']), [
                 'overwrite' => true,
             ]);
 
