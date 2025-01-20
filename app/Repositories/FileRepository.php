@@ -14,6 +14,9 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Response;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
+
 
 class FileRepository
 {
@@ -49,6 +52,7 @@ class FileRepository
         $fileExtension = $data['file']->getClientOriginalExtension();
 
         if (!$this->checkFileIfExist($data['group_id'], $basename )) {
+
             $version = 1;
 
             while ($this->fileModel->where('group_id', $data['group_id'])->where('name', $basename . '.' . $fileExtension)->exists()) {
@@ -65,7 +69,7 @@ class FileRepository
                 }
             }
 
-            $newFileName = $basename . '.' . $version . '.' . $fileExtension;
+            $newFileName = $basename . '.' . $fileExtension;
 
 
             Storage::disk('local')->put($groupName . '/' . $newFileName, file_get_contents($data['file']), [
@@ -96,17 +100,42 @@ class FileRepository
         return $this->groupModel->find($groupId)->name ?? '';
     }
 
-    public function downloadFile($data): string
+//    public function downloadFile($data): string
+//    {
+//        // Get the file path from the database
+//        $file = $this->fileModel->where('id', $data['file_id'])->first();
+//
+//        if (!$file || !$file->path) {
+//            abort(404, 'File not found');
+//        }
+//        return Response::download($file);
+//        // Generate the URL for the file
+//        //return $file->path;
+//    }
+
+    public function downloadFile($file_id): BinaryFileResponse
     {
+        Log::info('DownloadFile method called with file_id: ' . $file_id);
+
         // Get the file path from the database
-        $file = $this->fileModel->where('id', $data['file_id'])->first();
+        $file = $this->fileModel->where('id', $file_id)->first();
 
         if (!$file || !$file->path) {
             abort(404, 'File not found');
         }
 
-        // Generate the URL for the file
-        return $file->path;
+        $filePath = storage_path($file->path);
+
+        try {
+            // Generate the response
+            return Response::download($filePath, $file->name, [
+                'content_type' => $file->extension,
+                'expires' => 0,
+            ]);
+        } catch (\Exception $e) {
+            Log::error("Error downloading file: " . $e->getMessage());
+            abort(500, 'An error occurred while processing your request.');
+        }
     }
 
     public function addFileEvent(mixed $file_id, $user_id, $event_type_id): FileEvent
@@ -279,7 +308,6 @@ class FileRepository
         }
         return $isReserved;
     }
-
 
     public function showReportForUser($userId)
     {
