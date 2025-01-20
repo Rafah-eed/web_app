@@ -36,12 +36,8 @@ class FileController extends Controller
         return $this->fileService->uploadFileToGroup($validatedData);
     }
 
-    public function downloadFile(Request $request): JsonResponse
+    public function downloadFile($file_id): JsonResponse
     {
-        $data = $request->all();
-        $validation = $request->validate([
-            'file_id' => 'required|integer'
-        ]);
 
         $user_id = Auth::id();
         $data['user_id'] = $user_id;
@@ -49,14 +45,13 @@ class FileController extends Controller
         DB::beginTransaction();
 
         try {
-            $responseData = $this->fileService->downloadFile($data);
-            $this->fileService->addFileEvent($data['file_id'], $user_id, 2);
+            $responseData = $this->fileService->downloadFile($file_id);
+            $this->fileService->addFileEvent($file_id, $user_id, 2);
 
             DB::commit();
             return response()->json([
                 'status' => true,
                 'message' => 'File downloaded successfully',
-                'url' => $responseData
             ], 200);
         } catch (Exception $e) {
             DB::rollback();

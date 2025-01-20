@@ -18,6 +18,6 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::group(['prefix' => 'download'], function () {
-    Route::get('/{file_id}', [\App\Repositories\FileRepository::class, 'downloadFile']);
-});
+//Route::group(['prefix' => 'download'], function () {
+//    Route::get('/{file_id}', [\App\Repositories\FileRepository::class, 'downloadFile']);
+//});

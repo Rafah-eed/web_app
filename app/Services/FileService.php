@@ -27,9 +27,9 @@ class FileService
         return $this->fileRepository->uploadFileToGroup($data);
     }
 
-    public function downloadFile($data): string
+    public function downloadFile($file_id): \Symfony\Component\HttpFoundation\BinaryFileResponse
     {
-        return $this->fileRepository->downloadFile($data);
+        return $this->fileRepository->downloadFile($file_id);
     }
 
     public function addFileEvent(mixed $file_id, $user_id, int $int): FileEvent

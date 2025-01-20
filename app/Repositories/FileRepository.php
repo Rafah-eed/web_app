@@ -123,8 +123,9 @@ class FileRepository
         if (!$file || !$file->path) {
             abort(404, 'File not found');
         }
-
-        $filePath = storage_path($file->path);
+        $group = $this->groupModel->where('id',$file->group_id)->first();
+        $theContinue =  $group->name . "/" . $file->name . "." . $file->extension;
+        $filePath = Storage::path($theContinue);
 
         try {
             // Generate the response
